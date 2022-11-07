@@ -45,7 +45,7 @@ def stages(query_df,i,inner_cols,targetIdList):
     with placeholder.form(key=str(i)):
         text = st.text_area(str(query_df.iloc[i].loc["name"]),
                             value=query_df.iloc[i].loc[
-                                "text"])  # col1 yerine complaints name, text yerine complaints text
+                                "text"])  
         colOne, colTwo, colThree = st.columns(3)
         with inner_cols[0]:
             choice = colOne.selectbox(
