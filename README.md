@@ -25,8 +25,7 @@ source <venv-name> /bin/activate
   
 - Pycharm ile virtual environment oluşturma
 
-  <img src="https://camo.githubusercontent.com/..." data-canonical-src="https://github.com/elifftosunn/Data-Labeling/blob/master/img/virtualenvEnvironment.PNG
-" width="250" height="250" />
+  <img src="https://camo.githubusercontent.com/..." data-canonical-src="https://resources.jetbrains.com/help/img/idea/2022.2/py_create_virtual_environment_download_python.png" width="250" height="250" />
   
 - Terminal üzerinden streamlit, psycopg2(postgresql) ve pandas indirme
 
