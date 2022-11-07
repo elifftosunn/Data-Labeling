@@ -1,5 +1,11 @@
 <h1 align="left"> Veri Etiketleme Aracı </h1>
 Bu araç veri kazıma aşamasından sonra verilerin istenilen kategoriye göre etiketlenmesi ve kullanılmayacak olan verilerin database'ten silinmesi ile makine öğrenmesi modellerini kullanmak için etiketleme adımınını otomatikleştirmek amaçlı yapılmıştır.
+
+
+
+[streamlit-main-2022-11-07-16-11-69.webm](https://user-images.githubusercontent.com/92747017/200378635-52c4a8ad-82ad-4941-b46a-565224169c0a.webm)
+
+
 <h2 align="left"> Geliştirme Ortamını Ayarlamak </h2>
 <a href="https://www.python.org/downloads/" target="blank"><img align="center" src="https://img.shields.io/pypi/pyversions/Scrapy.svg"></a>
 
