@@ -2,11 +2,12 @@ import streamlit as st
 import psycopg2
 import pandas as pd
 
-hostname = "localhost"
-port_id = 5432
-database = "nlpDatabase"
-username = "postgres"
-password = "Eliftosun123"
+df = pd.read_csv("../databaseConnect/database.csv")
+hostname = df.hostname
+port_id = df.port_id
+database = df.database
+username = df.username
+password = df.password
 
 st.set_page_config(page_title="Veri Etiketleme Aracı",
                    page_icon=":bar_chart:",
