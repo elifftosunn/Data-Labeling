@@ -2,12 +2,11 @@ import streamlit as st
 import psycopg2
 import pandas as pd
 
-df = pd.read_csv("../databaseConnect/database.csv")
-hostname = df.hostname
-port_id = df.port_id
-database = df.database
-username = df.username
-password = df.password
+hostname = "ec2-3-227-68-43.compute-1.amazonaws.com"
+port_id = 5432
+database = "d35km1f047g05o"
+username = "wzgatqmfdcynrt"
+password = "2d72f11c41d8e9fab7b40cbfa7666e902b4bd40128df022f6c7f4e07ebb784b8"
 
 st.set_page_config(page_title="Veri Etiketleme Aracı",
                    page_icon=":bar_chart:",
