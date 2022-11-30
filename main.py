@@ -1,17 +1,15 @@
-import altair
 import streamlit as st
-import psycopg2, time, numpy, os, pyautogui, base64, plotly, kaleido
+import psycopg2, time, numpy, os
 import pandas as pd
 from psycopg2.extensions import register_adapter, AsIs
-import plotly.express as px
-from io import BytesIO, StringIO
-import plotly.io as pio
 
+df = pd.read_csv("../databaseConnect/database.csv")
+# hostname = "ec2-3-227-68-43.compute-1.amazonaws.com"
+# port_id = 5432
+# database = "d35km1f047g05o"
+# username = "wzgatqmfdcynrt"
+# password = "2d72f11c41d8e9fab7b40cbfa7666e902b4bd40128df022f6c7f4e07ebb784b8"
 
-
-
-
-# df = pd.read_csv("../databaseConnect/database.csv")
 hostname = "localhost"
 port_id = 5432
 database = "nlpDatabase"
@@ -28,53 +26,6 @@ st.set_page_config(page_title="Veri Etiketleme Aracı",
 
 st.markdown('''<h1 style='text-align: center; color: white; font_size = 20'> 📊 Veri Etiketleme Aracı</h1>''',
             unsafe_allow_html=True)
-
-def sqlExecute(raw_code):
-    with psycopg2.connect(host=hostname, port=port_id, dbname=database, user=username, password=password) as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(raw_code)
-            conn.commit()  # save
-
-
-def sqlData(raw_code):
-    with psycopg2.connect(host=hostname, port=port_id, dbname=database, user=username, password=password) as conn:
-        with conn.cursor() as curs:
-            curs.execute(raw_code)
-            conn.commit()
-            data = curs.fetchall()
-            return data
-def dataResult():
-    csvDataQuery = "select c.id,text,t.target, u.username from comp c join targets t using (id) inner join users u on t.userId = u.id;"
-    csvDataQuery = sqlData(csvDataQuery)
-    csvData = pd.DataFrame(csvDataQuery, columns=["id", "text", "target", "username"])
-    return csvData
-def page2():
-    def downloadImage(img_path, file_name):
-        with open(img_path, "rb") as file:
-            btn = st.download_button(
-                label="Download image",
-                data=file,
-                mime="image/png",
-                file_name=file_name
-            )
-    csvData = dataResult()
-    static = st.empty()
-    st.subheader("Etikete Göre İstatistikler")
-    fig = px.bar(csvData.target.value_counts(), width=1200)
-    st.plotly_chart(fig)
-    pio.kaleido.write_image(fig=fig, file='img/targetStatics.jpg', format='jpg', engine="kaleido")
-    downloadImage("img/targetStatics.jpg", "targetStatics.jpg")
-    staticButton = static.button("Kullanıcı İstatistikleri Görüntüle")
-    if staticButton:
-        st.subheader("Kullanıcılara Göre İstatistikler")
-        fig = px.bar(csvData.username.value_counts(), width=1200)
-        st.plotly_chart(fig)
-        pio.kaleido.write_image(fig=fig, file='img/userStatics.jpg', format='jpg', engine="kaleido")
-        downloadImage("img/userStatics.jpg","userStatics.jpg")
-        static.empty()
-
-       # target.empty()
-
 
 def sidebarPanel():
     with st.sidebar:
@@ -108,37 +59,47 @@ def sidebarPanel():
                     return userIdDf.iloc[0, 0]
 
         def file():
-            csvData = dataResult()
             cho = st.selectbox("Dataset indirme biçimini seçiniz", ("csv", "excel", "json"))
-            csvData.to_csv("datas/targetDataset.csv")
             if cho == "csv":
                 st.download_button(
                     label="📥 Download data as CSV",
-                    data=csvData.to_csv().encode("utf-8"),
-                    file_name='bank_result.csv',
+                    data=df.to_csv().encode("utf-8"),
+                    file_name='bank_deneme.csv',
                     mime='text/csv',
                 )
             elif cho == "excel":
-                file_path = "datas/targetDataset.csv"
+                file_path = "../databaseConnect/database.csv"
                 with open(file_path, 'rb') as my_file:
-                    st.download_button(label='📥 Download data as Excel', data=my_file, file_name='bank_result.xlsx',
+                    st.download_button(label='📥 Download data as Excel', data=my_file, file_name='bank_deneme.xlsx',
                                        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
             elif cho == "json":
                 st.download_button(
                     label="📥 Download data as Json",
-                    data=csvData.to_json(),
-                    file_name="bank_result.json",
+                    data=df.to_json(),
+                    file_name="bank_deneme.json",
                     mime="text/json"
                 )
-        # def statics():
-        #     staticButton = st.button("İstatistikleri Görüntüle")
-        #     if staticButton:
-        #         st.bar_chart(csvData.username.value_counts())
+
         userId = user()
         file()
     return userId
 
+
+def sqlExecute(raw_code):
+    with psycopg2.connect(host=hostname, port=port_id, dbname=database, user=username, password=password) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(raw_code)
+            conn.commit()  # save
+
+
+def sqlData(raw_code):
+    with psycopg2.connect(host=hostname, port=port_id, dbname=database, user=username, password=password) as conn:
+        with conn.cursor() as curs:
+            curs.execute(raw_code)
+            conn.commit()
+            data = curs.fetchall()
+            return data
 
 def addapt_numpy_float64(numpy_float64):
     return AsIs(numpy_float64)
@@ -199,24 +160,21 @@ def logout():
     os.environ["USER_ID"] = "None"
 def login():
     USER_ID = os.environ.get('USER_ID')
-    session = st.empty()
     if USER_ID == "None":
         USER_ID = sidebarPanel()
+        if USER_ID != None:
+            st.write(f"User Giriş Yapılıyor Yeni ID: {USER_ID}")
+
         os.environ["USER_ID"] = str(USER_ID)
     else:
-        # st.write(f"User Giriş Yapılıyor Yeni ID: {USER_ID}")
-        out = session.button("Çıkış")
-        if out:
-            st.write(f"{USER_ID} çıkış yapılıyor...")
-            time.sleep(0.5)
-            logout()
-            session.empty()
-            login()
-            time.sleep(0.5)
-            pyautogui.hotkey('f5')
+        st.write(f"User Giriş Yapmış ID: {USER_ID}")
     return USER_ID
 def main():
     USER_ID = login()
+    if USER_ID != "None":
+        out = st.button("Çıkış")
+        if out:
+            logout()
     outer_cols = st.columns([1, 1])
     targetIdQuery = "SELECT id FROM targets"
     targetIdQuery = sqlData(targetIdQuery)
@@ -236,13 +194,5 @@ def main():
         for i in range(10, 20):
             stages(query_df, i, targetIdList, USER_ID)
 
-def main_page():
-    main()
-
 if __name__ == "__main__":
-    page_names_to_funcs = {
-        "Ana Sayfa": main_page,
-        "İstatistikler": page2}
-
-    selected_page = st.sidebar.selectbox("Sayfa Seçiniz", page_names_to_funcs.keys())
-    page_names_to_funcs[selected_page]()
+    main()
