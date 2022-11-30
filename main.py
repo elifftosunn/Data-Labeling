@@ -1,9 +1,9 @@
 import streamlit as st
-import psycopg2, time, numpy, os
+import psycopg2, time, numpy, os, pyautogui
 import pandas as pd
 from psycopg2.extensions import register_adapter, AsIs
 
-df = pd.read_csv("../databaseConnect/database.csv")
+
 hostname = "localhost"
 port_id = 5432
 database = "nlpDatabase"
@@ -54,24 +54,28 @@ def sidebarPanel():
 
         def file():
             cho = st.selectbox("Dataset indirme biçimini seçiniz", ("csv", "excel", "json"))
+            csvDataQuery = "select c.id,text,t.target, u.username from comp c join targets t using (id) inner join users u on t.userId = u.id;"
+            csvDataQuery = sqlData(csvDataQuery)
+            csvData = pd.DataFrame(csvDataQuery, columns=["id","text","target","username"])
             if cho == "csv":
                 st.download_button(
                     label="📥 Download data as CSV",
-                    data=df.to_csv().encode("utf-8"),
-                    file_name='bank_deneme.csv',
+                    data=csvData.to_csv().encode("utf-8"),
+                    file_name='bank_result.csv',
                     mime='text/csv',
                 )
             elif cho == "excel":
-                file_path = "../databaseConnect/database.csv"
+                csvData.to_csv("datas/targetDataset.csv")
+                file_path = "datas/targetDataset.csv"
                 with open(file_path, 'rb') as my_file:
-                    st.download_button(label='📥 Download data as Excel', data=my_file, file_name='bank_deneme.xlsx',
+                    st.download_button(label='📥 Download data as Excel', data=my_file, file_name='bank_result.xlsx',
                                        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
             elif cho == "json":
                 st.download_button(
                     label="📥 Download data as Json",
-                    data=df.to_json(),
-                    file_name="bank_deneme.json",
+                    data=csvData.to_json(),
+                    file_name="bank_result.json",
                     mime="text/json"
                 )
 
@@ -154,21 +158,24 @@ def logout():
     os.environ["USER_ID"] = "None"
 def login():
     USER_ID = os.environ.get('USER_ID')
+    session = st.empty()
     if USER_ID == "None":
         USER_ID = sidebarPanel()
-        if USER_ID != None:
-            st.write(f"User Giriş Yapılıyor Yeni ID: {USER_ID}")
-
         os.environ["USER_ID"] = str(USER_ID)
     else:
-        st.write(f"User Giriş Yapmış ID: {USER_ID}")
+        # st.write(f"User Giriş Yapılıyor Yeni ID: {USER_ID}")
+        out = session.button("Çıkış")
+        if out:
+            st.write(f"{USER_ID} çıkış yapılıyor...")
+            time.sleep(0.5)
+            logout()
+            session.empty()
+            login()
+            time.sleep(0.5)
+            pyautogui.hotkey('f5')
     return USER_ID
 def main():
     USER_ID = login()
-    if USER_ID != "None":
-        out = st.button("Çıkış")
-        if out:
-            logout()
     outer_cols = st.columns([1, 1])
     targetIdQuery = "SELECT id FROM targets"
     targetIdQuery = sqlData(targetIdQuery)
@@ -190,3 +197,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
