@@ -3,13 +3,6 @@ import psycopg2, time, numpy, os
 import pandas as pd
 from psycopg2.extensions import register_adapter, AsIs
 
-df = pd.read_csv("../databaseConnect/database.csv")
-# hostname = "ec2-3-227-68-43.compute-1.amazonaws.com"
-# port_id = 5432
-# database = "d35km1f047g05o"
-# username = "wzgatqmfdcynrt"
-# password = "2d72f11c41d8e9fab7b40cbfa7666e902b4bd40128df022f6c7f4e07ebb784b8"
-
 hostname = "localhost"
 port_id = 5432
 database = "nlpDatabase"
