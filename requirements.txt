@@ -1,3 +1,6 @@
 streamlit==1.14.0
 psycopg2-binary==2.9.5
 pandas==1.5.2
+numpy==1.23.5
+plotly==5.11.0
+pyautogui==0.9.53
