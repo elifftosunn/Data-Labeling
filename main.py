@@ -11,7 +11,7 @@ hostname = "localhost"
 port_id = 5432
 database = "nlpDatabase"
 username = "postgres"
-password = "Eliftosun123"
+password = ""
 
 
 
