@@ -1,15 +1,17 @@
 import streamlit as st
-import psycopg2, time, numpy, os
+import psycopg2, time, numpy, os, pyautogui, base64, plotly, kaleido
 import pandas as pd
 from psycopg2.extensions import register_adapter, AsIs
+import plotly.express as px
+import plotly.io as pio
 
+
+# df = pd.read_csv("../databaseConnect/database.csv")
 hostname = "localhost"
 port_id = 5432
 database = "nlpDatabase"
 username = "postgres"
 password = "Eliftosun123"
-
-
 
 st.set_page_config(page_title="Veri Etiketleme Aracı",
                    page_icon=":bar_chart:",
@@ -20,6 +22,85 @@ st.set_page_config(page_title="Veri Etiketleme Aracı",
 st.markdown('''<h1 style='text-align: center; color: white; font_size = 20'> 📊 Veri Etiketleme Aracı</h1>''',
             unsafe_allow_html=True)
 
+def sqlExecute(raw_code):
+    with psycopg2.connect(host=hostname, port=port_id, dbname=database, user=username, password=password) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(raw_code)
+            conn.commit()  # save
+
+def sqlData(raw_code):
+    with psycopg2.connect(host=hostname, port=port_id, dbname=database, user=username, password=password) as conn:
+        with conn.cursor() as curs:
+            curs.execute(raw_code)
+            conn.commit()
+            data = curs.fetchall()
+            return data
+def dataResult():
+    csvDataQuery = "select c.id,text,t.target, u.username from comp c join targets t using (id) inner join users u on t.userId = u.id;"
+    csvDataQuery = sqlData(csvDataQuery)
+    csvData = pd.DataFrame(csvDataQuery, columns=["id", "text", "target", "username"])
+    return csvData
+def page2():
+    def downloadImage(img_path, file_name):
+        with open(img_path, "rb") as file:
+            btn = st.download_button(
+                label="Download image",
+                data=file,
+                mime="image/png",
+                file_name=file_name
+            )
+    csvData = dataResult()
+    columns = st.columns([4,1])
+    static = st.empty()
+    with columns[0]:
+        staticButton = static.button("Kullanıcı İstatistikleri Görüntüle", key="static")
+    with columns[1]:
+        USER_ID = login()
+    if staticButton:
+        hideButton = st.button("Kapat", key="hidden")
+        if hideButton:
+            static.empty()
+        fig = px.bar(csvData.username.value_counts(), width=1200, title="Etiket Atan Kullanıcı İstatistikleri")
+        st.plotly_chart(fig)
+        pio.kaleido.write_image(fig=fig, file='img/userStatics.jpg', format='jpg', engine="kaleido")
+        downloadImage("img/userStatics.jpg", "userStatics.jpg")
+        static.empty()
+    fig = px.bar(csvData.target.value_counts(), width=1200, title="Etiketlenmiş Veri Sayıları")
+    st.plotly_chart(fig)
+    pio.kaleido.write_image(fig=fig, file='img/targetStatics.jpg', format='jpg', engine="kaleido")
+    downloadImage("img/targetStatics.jpg", "targetStatics.jpg")
+    cols = st.columns([3,1])
+    with cols[0]:
+        st.dataframe(csvData)
+    with cols[1]:
+        file()
+    fig = px.pie(csvData, values=csvData.target.value_counts(), names=csvData.target.unique(), title="Etiketlenmiş Veri Yüzdeleri")
+    st.plotly_chart(fig)
+
+def file():
+        csvData = dataResult()
+        cho = st.selectbox("Dataset indirme biçimini seçiniz", ("csv", "excel", "json"))
+        csvData.to_csv("datas/targetDataset.csv", index=False)
+        if cho == "csv":
+            st.download_button(
+                label="📥 Download data as CSV",
+                data=csvData.to_csv().encode("utf-8"),
+                file_name='bank_result.csv',
+                mime='text/csv',
+            )
+        elif cho == "excel":
+            file_path = "datas/targetDataset.csv"
+            with open(file_path, 'rb') as my_file:
+                 st.download_button(label='📥 Download data as Excel', data=my_file, file_name='bank_result.xlsx',
+                                    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+        elif cho == "json":
+            st.download_button(
+            label="📥 Download data as Json",
+            data=csvData.to_json(),
+            file_name="bank_result.json",
+            mime="text/json"
+)
 def sidebarPanel():
     with st.sidebar:
         def user():
@@ -51,48 +132,15 @@ def sidebarPanel():
                     userIdDf = pd.DataFrame(userIdQuery)
                     return userIdDf.iloc[0, 0]
 
-        def file():
-            cho = st.selectbox("Dataset indirme biçimini seçiniz", ("csv", "excel", "json"))
-            if cho == "csv":
-                st.download_button(
-                    label="📥 Download data as CSV",
-                    data=df.to_csv().encode("utf-8"),
-                    file_name='bank_deneme.csv',
-                    mime='text/csv',
-                )
-            elif cho == "excel":
-                file_path = "../databaseConnect/database.csv"
-                with open(file_path, 'rb') as my_file:
-                    st.download_button(label='📥 Download data as Excel', data=my_file, file_name='bank_deneme.xlsx',
-                                       mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
-            elif cho == "json":
-                st.download_button(
-                    label="📥 Download data as Json",
-                    data=df.to_json(),
-                    file_name="bank_deneme.json",
-                    mime="text/json"
-                )
-
+        # def statics():
+        #     staticButton = st.button("İstatistikleri Görüntüle")
+        #     if staticButton:
+        #         st.bar_chart(csvData.username.value_counts())
         userId = user()
-        file()
+        # file()
     return userId
 
-
-def sqlExecute(raw_code):
-    with psycopg2.connect(host=hostname, port=port_id, dbname=database, user=username, password=password) as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(raw_code)
-            conn.commit()  # save
-
-
-def sqlData(raw_code):
-    with psycopg2.connect(host=hostname, port=port_id, dbname=database, user=username, password=password) as conn:
-        with conn.cursor() as curs:
-            curs.execute(raw_code)
-            conn.commit()
-            data = curs.fetchall()
-            return data
 
 def addapt_numpy_float64(numpy_float64):
     return AsIs(numpy_float64)
@@ -111,14 +159,16 @@ def repeatFunction(insertQuery, deleteQuery, placeholder, idNumber):
     deleteQuery = sqlExecute(deleteQuery)
     if insertQuery == None and deleteQuery == None:
         placeholder.empty()
+        pyautogui.hotkey('f5')
         st.success(f"{idNumber} id'li şikayet veritabanına aktarıldı.")
-    else:
-        placeholder.empty()
-        st.info(f"{idNumber} id'li şikayet targets tablosunda bulunuyor...")
+    # else:
+    #     placeholder.empty()
+    #     st.info(f"{idNumber} id'li şikayet targets tablosunda bulunuyor...")
 
 
-def stages(query_df, i, targetIdList, USER_ID):
-    idNumber = query_df.iloc[i, 0]  # idNumber = complaintId
+def stages(query_df, i, USER_ID):
+    idNumber = query_df.iloc[i, 0]
+    st.write(idNumber)
     placeholder = st.empty()
     with placeholder.form(key=str(i)):
         text = st.text_area(str(query_df.iloc[i].loc["name"]),
@@ -126,66 +176,90 @@ def stages(query_df, i, targetIdList, USER_ID):
                                 "text"])
         choice = st.selectbox(
             "Etiketi Seçiniz",
-            ('Kredi İşlemleri', 'Bankacılık İşlemleri', 'Kart İşlemleri', 'Müşteri Temsilcisi', 'Diğer'),
+            ('Kredi İşlemleri', 'Hesap İşlemleri', 'Kart İşlemleri', 'Müşteri Temsilcisi', "Kargo", "Limit(Hesap, KMH, Kredi Kartı)","KKB Skor" ,'Diğer'),
             key=i
         )
-        deleteButon = st.form_submit_button("Sil")
-        approveButon = st.form_submit_button("Onayla")
+        deleteButton = st.form_submit_button("Sil")
+        approveButton = st.form_submit_button("Onayla")
     deleteQuery = f"delete from complaints where id = {idNumber}"
-    if approveButon and USER_ID is not None:
+    if approveButton and USER_ID != None:
+        st.write(f"approveButton {idNumber}")
         insertQuery = f"insert into targets (id,target,userid) values ({idNumber},'{choice}',{USER_ID})"
-        if choice == 'Kredi İşlemleri' and idNumber not in targetIdList:
+        if choice == 'Kredi İşlemleri':
+            # st.write(idNumber)
             repeatFunction(insertQuery, deleteQuery, placeholder, idNumber)
-        elif choice == 'Bankacılık İşlemleri' and idNumber not in targetIdList:
+        elif choice == 'Hesap İşlemleri':
+            # st.write(idNumber)
             repeatFunction(insertQuery, deleteQuery, placeholder, idNumber)
-        elif choice == 'Kart İşlemleri' and idNumber not in targetIdList:
+        elif choice == 'Kart İşlemleri':
+            # st.write(idNumber)
             repeatFunction(insertQuery, deleteQuery, placeholder, idNumber)
-        elif choice == 'Müşteri Temsilcisi' and idNumber not in targetIdList:
+        elif choice == 'Müşteri Temsilcisi':
+            # st.write(idNumber)
             repeatFunction(insertQuery, deleteQuery, placeholder, idNumber)
-        elif choice == 'Diğer' and idNumber not in targetIdList:
+        elif choice == 'Kargo':
+            # st.write(idNumber)
             repeatFunction(insertQuery, deleteQuery, placeholder, idNumber)
-    elif deleteButon and USER_ID != "None":
+        elif choice == 'Limit(Hesap, KMH, Kredi Kartı)':
+            # st.write(idNumber)
+            repeatFunction(insertQuery, deleteQuery, placeholder, idNumber)
+        elif choice == 'KKB Skor':
+            # st.write(idNumber)
+            repeatFunction(insertQuery, deleteQuery, placeholder, idNumber)
+        elif choice == 'Diğer':
+            # st.write(idNumber)
+            repeatFunction(insertQuery, deleteQuery, placeholder, idNumber)
+    elif deleteButton and USER_ID != "None":
         deleteQuery = sqlExecute(deleteQuery)
         if deleteQuery == None:
             placeholder.empty()
+            pyautogui.hotkey('f5')
             st.success(f"{idNumber} id'li şikayet veritabanından silindi.")
 def logout():
     os.environ["USER_ID"] = "None"
 def login():
     USER_ID = os.environ.get('USER_ID')
+    session = st.empty()
     if USER_ID == "None":
         USER_ID = sidebarPanel()
-        if USER_ID != None:
-            st.write(f"User Giriş Yapılıyor Yeni ID: {USER_ID}")
-
         os.environ["USER_ID"] = str(USER_ID)
     else:
-        st.write(f"User Giriş Yapmış ID: {USER_ID}")
+        # st.write(f"User Giriş Yapılıyor Yeni ID: {USER_ID}")
+        out = session.button("Çıkış")
+        if out:
+            st.write(f"{USER_ID} çıkış yapılıyor...")
+            time.sleep(0.5)
+            logout()
+            session.empty()
+            login()
+            time.sleep(0.5)
+            pyautogui.hotkey('f5')
     return USER_ID
 def main():
     USER_ID = login()
-    if USER_ID != "None":
-        out = st.button("Çıkış")
-        if out:
-            logout()
     outer_cols = st.columns([1, 1])
-    targetIdQuery = "SELECT id FROM targets"
-    targetIdQuery = sqlData(targetIdQuery)
-    targetIdDataFrame = pd.DataFrame(targetIdQuery, columns=["targetId"])
-    targetIdList = [targetIdDataFrame.iloc[i, 0] for i in range(len(targetIdDataFrame))]
+    # targetIdQuery = "SELECT id FROM targets"
+    # targetIdQuery = sqlData(targetIdQuery)
+    # targetIdDataFrame = pd.DataFrame(targetIdQuery, columns=["targetId"])
+    # targetIdList = [targetIdDataFrame.iloc[i, 0] for i in range(len(targetIdDataFrame))]
+    raw_code = "SELECT id, name, text FROM complaints"
+    data = sqlData(raw_code)
+    query_df = pd.DataFrame(data, columns=["id", "name", "text"])
     with outer_cols[0]:
-        raw_code = "SELECT id, name, text FROM complaints"
-        data = sqlData(raw_code)
-        query_df = pd.DataFrame(data, columns=["id", "name", "text"])
         for i in range(10):
-            stages(query_df, i, targetIdList, USER_ID)
+            stages(query_df, i, USER_ID)
     with outer_cols[1]:
         # inner_cols = st.columns([1, 1, 1])
-        raw_code = "select id,name,text from complaints"
-        data = sqlData(raw_code)
-        query_df = pd.DataFrame(data, columns=["id", "name", "text"])
         for i in range(10, 20):
-            stages(query_df, i, targetIdList, USER_ID)
+            stages(query_df, i, USER_ID)
 
-if __name__ == "__main__":
+def main_page():
     main()
+
+if __name__ == "__main__":   # LEN DATASET: 19490
+    page_names_to_funcs = {
+        "Ana Sayfa": main_page,
+        "İstatistikler": page2}
+
+    selected_page = st.sidebar.selectbox("Select a page", page_names_to_funcs.keys())
+    page_names_to_funcs[selected_page]()
