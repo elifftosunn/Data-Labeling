@@ -3,7 +3,8 @@ Bu araç veri kazıma aşamasından sonra verilerin istenilen kategoriye göre e
 
 
 
-[streamlit-main-2022-11-07-16-11-69.webm](https://user-images.githubusercontent.com/92747017/200378635-52c4a8ad-82ad-4941-b46a-565224169c0a.webm)
+[streamlit-main-2022-12-04-04-12-22.webm](https://user-images.githubusercontent.com/92747017/205483943-8559ed1e-d764-4313-9d13-12bb1bd51566.webm)
+
 
 
 <h2 align="left"> Geliştirme Ortamını Ayarlamak </h2>

@@ -11,7 +11,7 @@ hostname = "localhost"
 port_id = 5432
 database = "nlpDatabase"
 username = "postgres"
-password = "Eliftosun123"
+password = ""
 
 st.set_page_config(page_title="Veri Etiketleme Aracı",
                    page_icon=":bar_chart:",
